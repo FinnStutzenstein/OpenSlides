@@ -33,6 +33,9 @@ class ElementCacheProvider(Protocol):
     def __init__(self, ensure_cache: Callable[[], Coroutine[Any, Any, None]]) -> None:
         ...
 
+    async def set_marker(self) -> None:
+        ...
+
     async def ensure_cache(self) -> None:
         ...
 
@@ -235,6 +238,10 @@ class RedisCacheProvider:
             key: hashlib.sha1(script.encode()).hexdigest()
             for key, (script, _) in self.scripts.items()
         }
+
+    async def set_marker(self) -> None:
+        async with get_connection() as redis:
+            return await redis.set("production_marker", 1)
 
     async def ensure_cache(self) -> None:
         await self._ensure_cache()
@@ -504,6 +511,9 @@ class MemoryCacheProvider:
         self.change_id_data: Dict[int, Set[str]] = {}
         self.locks: Dict[str, str] = {}
         self.default_change_id: int = -1
+
+    async def set_marker(self) -> None:
+        raise ImproperlyConfigured("You should enable redis!")
 
     async def ensure_cache(self) -> None:
         pass

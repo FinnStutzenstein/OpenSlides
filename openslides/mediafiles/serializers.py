@@ -87,9 +87,10 @@ class MediafileSerializer(ModelSerializer):
             "parent",
             "list_of_speakers_id",
             "inherited_access_groups_id",
+            "original_filename",
         )
 
-        read_only_fields = ("path",)
+        read_only_fields = ("path", "original_filename", )
 
     def validate(self, data):
         title = data.get("title")

@@ -7,6 +7,7 @@ from ..utils.rest_api import (
     JSONField,
     ModelSerializer,
     RelatedField,
+    SerializerMethodField,
     ValidationError,
 )
 from .models import Group, PersonalNote, User
@@ -54,11 +55,14 @@ class UserFullSerializer(ModelSerializer):
         ),
     )
 
+    password = SerializerMethodField()
+
     class Meta:
         model = User
         fields = USERCANSEEEXTRASERIALIZER_FIELDS + (
             "default_password",
             "session_auth_hash",
+            "password",
         )
         read_only_fields = ("last_email_send",)
 
@@ -100,6 +104,12 @@ class UserFullSerializer(ModelSerializer):
             validated_data["default_password"] = User.objects.make_random_password()
         validated_data["password"] = make_password(validated_data["default_password"])
         return validated_data
+
+    def get_password(self, user):
+        if isinstance(user, User):
+            return user.password
+        else:
+            return ""
 
     def create(self, validated_data):
         """

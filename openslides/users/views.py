@@ -714,6 +714,20 @@ class UserLoginView(WhoAmIDataView):
         if not form.is_valid():
             raise ValidationError({"detail": "Username or password is not correct."})
         self.user = form.get_user()
+
+        # Check for Read Only users, that should move to another (read only) instance
+        read_only_usernames = getattr(settings, "READ_ONLY_USERNAMES", [])
+        if self.user.username in read_only_usernames:
+            raise ValidationError(
+                {
+                    "detail": getattr(
+                        settings,
+                        "READ_ONLY_MESSAGE",
+                        "Please use the read only instance to login.",
+                    )
+                }
+            )
+
         auth_login(self.request, self.user)
         return super().post(*args, **kwargs)
 

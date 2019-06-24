@@ -155,6 +155,7 @@ class ElementCache:
                 await self.cache_provider.reset_full_cache(mapping, default_change_id)
                 if schema_version:
                     await self.cache_provider.set_schema_version(schema_version)
+                await self.cache_provider.set_marker()
                 logger.info("Done saving the cache data.")
             finally:
                 await self.cache_provider.del_lock(lock_name)

@@ -4,6 +4,7 @@ from collections import OrderedDict
 from operator import attrgetter
 from typing import Any, Dict, List
 
+from asgiref.sync import async_to_sync
 from django.apps import AppConfig
 from django.conf import settings
 from django.db.models.signals import post_migrate, pre_delete
@@ -209,5 +210,6 @@ def startup():
     from openslides.core.models import History
 
     element_cache.ensure_schema_version()
+    async_to_sync(element_cache.cache_provider.set_marker)()
     set_constants(get_constants_from_apps())
     History.objects.build_history()
