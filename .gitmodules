@@ -1,0 +1,3 @@
+[submodule "openslides-datastore-service"]
+	path = openslides-datastore-service
+	url = git@github.com:OpenSlides/openslides-datastore-service.git

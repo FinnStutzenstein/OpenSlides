@@ -1,0 +1,38 @@
+version: '3'
+services:
+    # DATASTORE SECTION
+    datastore-writer:
+        depends_on:
+            - datastore-postgresql
+            - message-bus
+        environment:
+            - db_host=datastore-postgresql
+            - db_user=openslides
+            - db_password=openslides
+            - db_database=openslides
+            - redis_host=message-bus
+        networks:
+            - datastore-postgresql
+            - message-bus
+        # test
+        ports:
+            - "127.0.0.1:8000:8000"
+    datastore-postgresql:
+        image: sameersbn/postgresql:10
+        labels:
+            org.openslides.role: "postgres"
+        environment:
+            - DB_USER=openslides
+            - DB_PASS=openslides
+            - DB_NAME=openslides
+        networks:
+            - datastore-postgresql
+
+    # SHARED
+    message-bus:
+        image: redis:alpine
+        networks:
+            - message-bus
+networks:
+    datastore-postgresql:
+    message-bus:
