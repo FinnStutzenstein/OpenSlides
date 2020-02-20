@@ -6,11 +6,11 @@ services:
             - datastore-postgresql
             - message-bus
         environment:
-            - db_host=datastore-postgresql
-            - db_user=openslides
-            - db_password=openslides
-            - db_database=openslides
-            - redis_host=message-bus
+            - DATASTORE_DATABASE_HOST=datastore-postgresql
+            - DATASTORE_DATABASE_USER=openslides
+            - DATASTORE_DATABASE_PASSWORD=openslides
+            - DATASTORE_DATABASE_NAME=openslides
+            - MESSAGE_BUS_HOST=message-bus
         networks:
             - datastore-postgresql
             - message-bus
