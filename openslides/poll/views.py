@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from rest_framework import status
 
+from openslides.utils.timing import Timing
 from openslides.utils.auth import in_some_groups
 from openslides.utils.autoupdate import inform_changed_data
 from openslides.utils.rest_api import (
@@ -156,9 +157,13 @@ class BasePollViewSet(ModelViewSet):
 
         poll.state = BasePoll.STATE_PUBLISHED
         poll.save()
-        inform_changed_data(vote.user for vote in poll.get_votes().all() if vote.user)
-        inform_changed_data(poll.get_votes())
-        inform_changed_data(poll.get_options())
+        timing = Timing("icd")
+        inform_changed_data((vote.user for vote in poll.get_votes().all() if vote.user), final_data=True)
+        timing()
+        inform_changed_data(poll.get_votes(), final_data=True)
+        timing()
+        inform_changed_data(poll.get_options(), final_data=True)
+        timing(True)
         return Response()
 
     @detail_route(methods=["POST"])
