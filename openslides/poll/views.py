@@ -158,7 +158,9 @@ class BasePollViewSet(ModelViewSet):
         poll.state = BasePoll.STATE_PUBLISHED
         poll.save()
         timing = Timing("icd")
-        inform_changed_data((vote.user for vote in poll.get_votes().all() if vote.user), final_data=True)
+        inform_changed_data(
+            (vote.user for vote in poll.get_votes().all() if vote.user), final_data=True
+        )
         timing()
         inform_changed_data(poll.get_votes(), final_data=True)
         timing()

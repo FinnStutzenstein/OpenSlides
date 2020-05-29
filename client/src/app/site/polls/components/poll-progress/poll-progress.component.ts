@@ -16,9 +16,21 @@ import { ViewBasePoll } from 'app/site/polls/models/view-base-poll';
 })
 export class PollProgressComponent extends BaseViewComponent implements OnInit {
     @Input()
-    public poll: ViewBasePoll;
+    public set poll(value: ViewBasePoll) {
+        this._poll = value;
+        console.log("set poll");
+    }
 
+    public get poll(): ViewBasePoll {
+        return this._poll;
+    }
+
+    private _poll: ViewBasePoll;
+
+
+    public votescast: number;
     public max: number;
+    public valueInPercent: number;
 
     public constructor(
         title: Title,
@@ -29,20 +41,24 @@ export class PollProgressComponent extends BaseViewComponent implements OnInit {
         super(title, translate, snackbar);
     }
 
-    public get valueInPercent(): number {
-        if (this.poll) {
-            return (this.poll.votesvalid / this.max) * 100;
-        } else {
-            return 0;
-        }
-    }
-
     /**
      * OnInit.
      * Sets the observable for groups.
      */
     public ngOnInit(): void {
+        console.log("On init", this.poll);
         if (this.poll) {
+            console.log(this.poll, this.poll.votesvalid, this.poll.voted.length);
+            const ids = new Set();
+            for (const option of this.poll.options) {
+                for (const vote of option.votes) {
+                    if (vote.user_id) {
+                        ids.add(vote.user_id);
+                    }
+                }
+            }
+            console.log(ids.size);
+            this.votescast = ids.size;
             this.userRepo
                 .getViewModelListObservable()
                 .pipe(
@@ -52,6 +68,8 @@ export class PollProgressComponent extends BaseViewComponent implements OnInit {
                 )
                 .subscribe(users => {
                     this.max = users.length;
+
+                    this.valueInPercent = (this.votescast / this.max) * 100;
                 });
         }
     }

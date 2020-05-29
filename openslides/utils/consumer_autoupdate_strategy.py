@@ -84,16 +84,14 @@ class ConsumerAutoupdateStrategy:
             self.timer_task_handle = None
 
     async def send_autoupdate(self, in_response: Optional[str] = None) -> None:
-        max_change_id = (
-            self.max_seen_change_id
-        )  # important to save this variable, because
-        # it can change during runtime.
+        # it is important to save this variable, because it can change during runtime.
+        max_change_id = self.max_seen_change_id
         autoupdate = await get_autoupdate_data(
             cast(int, self.client_change_id), max_change_id, self.consumer.user_id
         )
         if autoupdate is not None:
             # It will be send, so we can set the client_change_id
-            self.client_change_id = max_change_id
+            self.client_change_id = max_change_id + 1
             await self.consumer.send_json(
                 type="autoupdate", content=autoupdate, in_response=in_response,
             )

@@ -182,7 +182,7 @@ def inform_changed_data(
     user_id: Optional[int] = None,
     disable_history: bool = False,
     no_delete_on_restriction: bool = False,
-    final_data: bool = False
+    final_data: bool = False,
 ) -> None:
     """
     Informs the autoupdate system and the caching system about the creation or
