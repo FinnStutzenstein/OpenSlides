@@ -4,12 +4,12 @@ import { Title } from '@angular/platform-browser';
 
 import { TranslateService } from '@ngx-translate/core';
 
+import { DataStoreService } from 'app/core/core-services/data-store.service';
 import { OpenSlidesService } from 'app/core/core-services/openslides.service';
 import { OperatorService, Permission } from 'app/core/core-services/operator.service';
 import { ConfigRepositoryService } from 'app/core/repositories/config/config-repository.service';
 import { UpdateService } from 'app/core/ui-services/update.service';
 import { BaseViewComponent } from 'app/site/base/base-view';
-import { DataStoreService } from 'app/core/core-services/data-store.service';
 
 @Component({
     selector: 'os-legal-notice',

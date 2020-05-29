@@ -5,7 +5,6 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from rest_framework import status
 
-from openslides.utils.timing import Timing
 from openslides.utils.auth import in_some_groups
 from openslides.utils.autoupdate import inform_changed_data
 from openslides.utils.rest_api import (
@@ -18,6 +17,7 @@ from openslides.utils.rest_api import (
     ValidationError,
     detail_route,
 )
+from openslides.utils.timing import Timing
 
 from .models import BasePoll
 

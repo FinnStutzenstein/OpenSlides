@@ -49,13 +49,11 @@ export class PollProgressComponent extends BaseViewComponent {
         private userRepo: UserRepositoryService
     ) {
         super(title, translate, snackbar);
-        this.userRepo
-            .getViewModelListObservable()
-            .subscribe(users => {
-                if (users) {
-                    this.calculateMaxUsers(users);
-                }
-            });
+        this.userRepo.getViewModelListObservable().subscribe(users => {
+            if (users) {
+                this.calculateMaxUsers(users);
+            }
+        });
     }
 
     private calculateMaxUsers(allUsers?: ViewUser[]): void {
@@ -66,7 +64,7 @@ export class PollProgressComponent extends BaseViewComponent {
             allUsers = this.userRepo.getViewModelList();
         }
 
-        allUsers = allUsers.filter(user => user.is_present && this.poll.groups_id.intersect(user.groups_id).length)
+        allUsers = allUsers.filter(user => user.is_present && this.poll.groups_id.intersect(user.groups_id).length);
 
         this.max = allUsers.length;
         this.valueInPercent = this.poll ? (this.votescast / this.max) * 100 : 0;
