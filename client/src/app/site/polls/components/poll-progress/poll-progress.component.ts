@@ -3,7 +3,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Title } from '@angular/platform-browser';
 
 import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
+import { MotionPollRepositoryService } from 'app/core/repositories/motions/motion-poll-repository.service';
 import { UserRepositoryService } from 'app/core/repositories/users/user-repository.service';
 import { BaseViewComponent } from 'app/site/base/base-view';
 import { ViewBasePoll } from 'app/site/polls/models/view-base-poll';
@@ -15,23 +17,46 @@ import { ViewUser } from 'app/site/users/models/view-user';
     styleUrls: ['./poll-progress.component.scss']
 })
 export class PollProgressComponent extends BaseViewComponent {
+    private pollId: number = null;
+    private pollSubscription: Subscription = null;
+
     @Input()
     public set poll(value: ViewBasePoll) {
-        this._poll = value;
+        if (value.id !== this.pollId) {
+            this.pollId = value.id;
 
-        // We cannot use this.poll.votescast during the voting, since it can
-        // be reported with false values from the server
-        const ids = new Set();
-        for (const option of this.poll.options) {
-            for (const vote of option.votes) {
-                if (vote.user_id) {
-                    ids.add(vote.user_id);
-                }
+            if (this.pollSubscription !== null) {
+                this.pollSubscription.unsubscribe();
+                this.pollSubscription = null;
             }
-        }
-        this.votescast = ids.size;
 
-        this.calculateMaxUsers();
+            this.pollSubscription = this.pollRepo.getViewModelObservable(this.pollId).subscribe(poll => {
+                if (poll) {
+                    this._poll = poll;
+
+                    // We may cannot use this.poll.votescast during the voting, since it can
+                    // be reported with false values from the server
+                    // -> calculate the votes on our own.
+                    const ids = new Set();
+                    for (const option of this.poll.options) {
+                        for (const vote of option.votes) {
+                            if (vote.user_id) {
+                                ids.add(vote.user_id);
+                            }
+                        }
+                    }
+                    this.votescast = ids.size;
+
+                    // But sometimes there are not enough votes (poll.votescast is higher).
+                    // If this happens, take the value from the poll
+                    if (this.poll.votescast > this.votescast) {
+                        this.votescast = this.poll.votescast;
+                    }
+
+                    this.calculateMaxUsers();
+                }
+            });
+        }
     }
     public get poll(): ViewBasePoll {
         return this._poll;
@@ -46,7 +71,8 @@ export class PollProgressComponent extends BaseViewComponent {
         title: Title,
         protected translate: TranslateService,
         snackbar: MatSnackBar,
-        private userRepo: UserRepositoryService
+        private userRepo: UserRepositoryService,
+        private pollRepo: MotionPollRepositoryService
     ) {
         super(title, translate, snackbar);
         this.userRepo.getViewModelListObservable().subscribe(users => {

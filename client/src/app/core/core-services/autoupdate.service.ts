@@ -60,6 +60,10 @@ export function isAutoupdateFormat(obj: any): obj is AutoupdateFormat {
 })
 export class AutoupdateService {
     private mutex = new Mutex();
+
+    private receivedAutoupdates = [];
+    private processedAutoupdates = [];
+
     /**
      * Constructor to create the AutoupdateService. Calls the constructor of the parent class.
      * @param websocketService
@@ -94,12 +98,16 @@ export class AutoupdateService {
      * Handles the change ids of all autoupdates.
      */
     private async storeResponse(autoupdate: AutoupdateFormat): Promise<void> {
+        this.receivedAutoupdates.push(autoupdate);
+        console.log('received', this.receivedAutoupdates);
         const unlock = await this.mutex.lock();
         if (autoupdate.all_data) {
             await this.storeAllData(autoupdate);
         } else {
             await this.storePartialAutoupdate(autoupdate);
         }
+        this.processedAutoupdates.push('processed', autoupdate);
+        console.log(this.processedAutoupdates);
         unlock();
     }
 
