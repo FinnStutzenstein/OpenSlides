@@ -537,6 +537,7 @@ class RedisCacheProvider:
             try:
                 result = await redis.evalsha(hash, keys, args)
             except aioredis.errors.ReplyError as e:
+                logger.warn("Redis reported an error (eval): " + str(e))
                 if str(e).startswith("NOSCRIPT"):
                     result = await self._eval(redis, script_name, keys=keys, args=args)
                 elif str(e) == "cache_reset":
@@ -561,6 +562,7 @@ class RedisCacheProvider:
         try:
             return await redis.eval(self.scripts[script_name][0], keys, args)
         except aioredis.errors.ReplyError as e:
+                logger.warn("Redis reported an error (_eval): " + str(e))
             if str(e) == "cache_reset":
                 raise CacheReset()
             else:
