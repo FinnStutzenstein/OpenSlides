@@ -71,7 +71,7 @@ def register_projector_slide(name: str, slide: ProjectorSlide) -> None:
 
 
 async def get_projector_data(
-    projector_ids: List[int] = None,
+    projector_ids: List[int] = None, all_data_provider: ProjectorAllDataProvider = None
 ) -> Dict[int, List[Dict[str, Any]]]:
     """
     Calculates and returns the data for one or all projectors.
@@ -106,7 +106,8 @@ async def get_projector_data(
         projector_ids = []
 
     projector_data: Dict[int, List[Dict[str, Any]]] = {}
-    all_data_provider = ProjectorAllDataProvider()
+    if all_data_provider is None:
+        all_data_provider = ProjectorAllDataProvider()
     projectors = await all_data_provider.get_collection("core/projector")
 
     for projector_id, projector in projectors.items():
@@ -120,11 +121,19 @@ async def get_projector_data(
 
         projector_data[projector_id] = []
         for element in projector["elements"]:
-            projector_slide = projector_slides[element["name"]]
-            try:
-                data = await projector_slide(all_data_provider, element, projector_id)
-            except ProjectorElementException as err:
-                data = {"error": str(err)}
+            name = element.get("name")
+            if not isinstance(name, str):
+                name = None
+            projector_slide = projector_slides.get(name)
+            if projector_slide is None:
+                data = {"error": f"unknwown slide {name}"}
+            else:
+                try:
+                    data = await projector_slide(
+                        all_data_provider, element, projector_id
+                    )
+                except ProjectorElementException as err:
+                    data = {"error": str(err)}
             projector_data[projector_id].append({"data": data, "element": element})
 
     return projector_data

@@ -158,6 +158,15 @@ README.md using following command::
 
     $ npm run licenses
 
+c. Export test data to OS3+ Autoupdate Service
+''''''''''''''''''''''''''''''''''''''''''''''
+
+Prepare OpenSlides with a filled test DB. Run::
+
+    $ python manage.py export_os3plus
+
+A `export.json` will be created.
+
 
 4. Notes for running OpenSlides in larger setups
 ------------------------------------------------

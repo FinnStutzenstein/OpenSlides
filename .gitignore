@@ -72,6 +72,7 @@ client/yarn.lock
 package-lock.json
 client/package-lock.json
 cypress.json
+export.json
 
 ## Deployment
 # Docker build artifacts
