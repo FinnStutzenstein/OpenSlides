@@ -2,112 +2,49 @@ version: "3"
 services:
   datastore-reader:
     image: openslides-datastore-reader-dev
-    depends_on:
-      - postgres
-      - otel-collector
-    env_file: services.env
-    environment:
-      - DATASTORE_ENABLE_DEV_ENVIRONMENT=1
-      - NUM_WORKERS=8
     volumes:
-      - ../openslides-datastore-service/shared/shared:/app/shared
-      - ../openslides-datastore-service/reader/reader:/app/reader
-    ports:
-      - 9010:9010
+      - ./openslides-datastore-service/shared/shared:/app/shared
+      - ./openslides-datastore-service/reader/reader:/app/reader
+    depends_on:
+      - otel-collector
   datastore-writer:
     image: openslides-datastore-writer-dev
-    depends_on:
-      - postgres
-      - message-bus
-      - otel-collector
-    env_file: services.env
     volumes:
-      - ../openslides-datastore-service/shared/shared:/app/shared
-      - ../openslides-datastore-service/writer/writer:/app/writer
-      - ../openslides-datastore-service/cli:/app/cli
+      - ./openslides-datastore-service/shared/shared:/app/shared
+      - ./openslides-datastore-service/writer/writer:/app/writer
+      - ./openslides-datastore-service/cli:/app/cli
     environment:
       - DATASTORE_ENABLE_DEV_ENVIRONMENT=1
       - COMMAND=create_initial_data
       - DATASTORE_INITIAL_DATA_FILE=https://raw.githubusercontent.com/OpenSlides/OpenSlides/openslides4-dev/docs/example-data.json
-    ports:
-      - 9011:9011
-  postgres:
-    image: postgres:11
-    environment:
-      - POSTGRES_USER=openslides
-      - POSTGRES_PASSWORD=openslides
-      - POSTGRES_DB=openslides
   client:
     image: openslides-client-dev
-    depends_on:
-      - backend
-      - autoupdate
-    env_file: services.env
     volumes:
-      - ../openslides-client/client/src:/app/src
+      - ./openslides-client/client/src:/app/src
   backend:
     image: openslides-backend-dev
-    depends_on:
-      - datastore-reader
-      - datastore-writer
-      - auth
-      - permission
-      - otel-collector
-    env_file: services.env
     volumes:
-      - ../openslides-backend/openslides_backend:/app/openslides_backend
+      - ./openslides-backend/openslides_backend:/app/openslides_backend
+    depends_on:
+      - otel-collector
   autoupdate:
     image: openslides-autoupdate-dev
-    depends_on:
-      - datastore-reader
-      - message-bus
-    environment:
-      - AUTH=fake
-    env_file: services.env
     volumes:
-      - ../openslides-autoupdate-service/cmd:/root/cmd
-      - ../openslides-autoupdate-service/internal:/root/internal
-  permission:
-    image: openslides-permission-dev
-    depends_on:
-      - datastore-reader
-    env_file: services.env
-    volumes:
-      - ../openslides-permission-service/cmd:/app/cmd
-      - ../openslides-permission-service/internal:/app/internal
-      - ../openslides-permission-service/pkg:/app/pkg
+      - ./openslides-autoupdate-service/cmd:/root/cmd
+      - ./openslides-autoupdate-service/internal:/root/internal
   auth:
     image: openslides-auth-dev
-    depends_on:
-      - datastore-reader
-      - cache
-    env_file: services.env
     volumes:
-      - ../openslides-auth-service/auth/src:/app/src
-    ports:
-      - 9004:9004
-  cache:
-    image: redis:latest
+      - ./openslides-auth-service/auth/src:/app/src
   media:
     image: openslides-media-dev
-    depends_on:
-      - backend
-      - postgres
-    env_file: services.env
     volumes:
-      - ../openslides-media-service/src:/app/src
-  message-bus:
-    image: redis:latest
+      - ./openslides-media-service/src:/app/src
   haproxy:
     image: openslides-haproxy-dev
-    depends_on:
-      - client
-      - backend
-      - autoupdate
-    ports:
-      - "8000:8000"
     volumes:
-      - ../haproxy/src:/usr/local/etc/haproxy
+      - ./haproxy/src:/usr/local/etc/haproxy
+
 
   jaeger-all-in-one:
     image: jaegertracing/all-in-one:latest
@@ -115,8 +52,10 @@ services:
       - "16686:16686"
     #  - "14268"
     #  - "14250"
+
+  # Collector
   otel-collector:
-    image: otel/opentelemetry-collector:latest
+    image: otel/opentelemetry-collector-dev:latest
     command: ["--config=/etc/otel-collector-config.yaml", "--log-level=DEBUG"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
@@ -132,6 +71,7 @@ services:
     #  - "55670:55679" # zpages extension
     depends_on:
       - jaeger-all-in-one
+
   # Agent
   #otel-agent:
   #  image: otel/opentelemetry-collector-dev:latest
@@ -147,6 +87,32 @@ services:
   #    - "13133"       # health_check
   #  depends_on:
   #    - otel-collector
+
+  # Synthetic load generators
+  #jaeger-emitter:
+  #  image: omnition/synthetic-load-generator:1.0.25
+  #  environment:
+  #    - JAEGER_COLLECTOR_URL=http://otel-agent:14268
+  #  depends_on:
+  #    - otel-agent
+
+  #zipkin-emitter:
+  #  image: omnition/synthetic-load-generator:1.0.25
+  #  environment:
+  #    - ZIPKINV2_JSON_URL=http://otel-agent:9411/api/v2/spans
+  #  depends_on:
+  #    - otel-agent
+
+  #metrics-load-generator:
+  #  image: golang:1.12.7
+  #  volumes:
+  #    - ./app/main.go:/usr/src/main.go
+  #  environment:
+  #    - GO111MODULE=on
+  #    - OTEL_AGENT_ENDPOINT=otel-agent:55678
+  #  command: ["bash", "-c", "go run /usr/src/main.go"]
+  #  depends_on:
+  #    - otel-agent
 
   prometheus:
     image: prom/prometheus:latest
