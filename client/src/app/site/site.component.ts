@@ -10,7 +10,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
 
 import { navItemAnim } from '../shared/animations';
+import { ConstantsService } from 'app/core/core-services/constants.service';
 import { OfflineService } from 'app/core/core-services/offline.service';
+import { ChatNotificationService } from 'app/core/ui-services/chat-notification.service';
+import { ChatService } from 'app/core/ui-services/chat.service';
 import { OverlayService } from 'app/core/ui-services/overlay.service';
 import { UpdateService } from 'app/core/ui-services/update.service';
 import { BaseComponent } from '../base.component';
@@ -70,6 +73,9 @@ export class SiteComponent extends BaseComponent implements OnInit {
         return this.mainMenuService.entries;
     }
 
+    public chatNotificationAmount = 0;
+    public canSeeChat = false;
+
     /**
      * Constructor
      * @param route
@@ -94,7 +100,9 @@ export class SiteComponent extends BaseComponent implements OnInit {
         public OSStatus: OpenSlidesStatusService,
         public timeTravel: TimeTravelService,
         private matSnackBar: MatSnackBar,
-        private overlayService: OverlayService
+        private overlayService: OverlayService,
+        private chatNotificationService: ChatNotificationService,
+        private chatService: ChatService
     ) {
         super(title, translate);
         overlayService.showSpinner(translate.instant('Loading data. Please wait ...'));
@@ -116,6 +124,11 @@ export class SiteComponent extends BaseComponent implements OnInit {
                     this.showUpdateNotification();
                 }
             });
+
+        this.chatNotificationService.chatgroupNotificationsObservable.subscribe(amounts => {
+            this.chatNotificationAmount = Object.keys(amounts).reduce((sum, key) => sum + amounts[key], 0);
+        });
+        this.chatService.canSeeChatObservable.subscribe(canSeeChat => (this.canSeeChat = canSeeChat));
     }
 
     /**
